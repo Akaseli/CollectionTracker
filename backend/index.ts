@@ -1,9 +1,15 @@
+//Env
+import * as dotenv from 'dotenv'
+dotenv.config({ path: __dirname + '/.env' })
+
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import session from "express-session";
 import passport from "passport";
+
+
 
 import { StrategyOptions, Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 
@@ -18,13 +24,17 @@ app.use(
   })
 );
 
-app.use(cookieParser("secret_here"));
+if(process.env.SECRET == undefined){
+  throw new Error("Must have a secret to run this thing.")
+}
+
+app.use(cookieParser(process.env.SECRET));
 
 app.use(bodyParser.urlencoded({ extended: true}));
 
 app.use(
   session({
-    secret: "secret_here",
+    secret: process.env.SECRET,
     resave: true,
     saveUninitialized: true
   })
@@ -36,7 +46,7 @@ app.use(passport.session());
 
 var options:StrategyOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey : "secret_here",
+  secretOrKey : process.env.SECRET,
   issuer: "login.localhost",
   audience: "localhost"
 }
