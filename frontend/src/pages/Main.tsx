@@ -1,4 +1,4 @@
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Container, Divider, Grid, Snackbar, SnackbarCloseReason, Stack, TextField, Typography } from '@mui/material';
 import axios from 'axios';
 import React, { useState } from 'react'
 
@@ -13,6 +13,9 @@ export const MainPage: React.FC<Props> = () => {
   const [loginPass, setLoginPass] = useState("")
   const [loginUser, setLoginUser] = useState("")
 
+  const [snackbar, openSnackbar] = useState(false)
+  const [snackMessage, changeMessage] = useState("")
+
   const register = () => {
     axios({
       method: "POST",
@@ -22,7 +25,17 @@ export const MainPage: React.FC<Props> = () => {
       },
       withCredentials: true,
       url: "/api/register/"
-    }).then((response) => console.log(response))
+    }).then((response) => {
+      //Successfull
+      if(response.data.status == "success"){
+        //Fetch account info 
+
+      }
+      else{
+        changeMessage(response.data.message);
+        openSnackbar(true);
+      }
+    })
   }
 
   const login = () => {
@@ -34,23 +47,58 @@ export const MainPage: React.FC<Props> = () => {
       },
       withCredentials: true,
       url: "/api/login/",
-    }).then((response) => console.log(response))
+    }).then((response) => {
+      //Successfull
+      if(response.data.status == "success"){
+        //Fetch account info 
+
+      }
+      else{
+        changeMessage(response.data.message);
+        openSnackbar(true);
+      }
+    })
   }
 
+  const handleClose = (event: React.SyntheticEvent | Event, reason: SnackbarCloseReason) => {
+    if(reason === "clickaway"){
+      return;
+    }
+
+    openSnackbar(false)
+  }
 
   return (
     <Box>
-      <Typography>Collection Tracker</Typography>
+      <Typography variant="h4">Collection Tracker</Typography>
 
-      <Typography>Register</Typography>
-      <TextField label="Username" onChange={(e) => {setRegisterUser(e.target.value)}}/>
-      <TextField label="Password" type="password" onChange={(e) => {setRegisterPass(e.target.value)}}/>
-      <Button onClick={register} variant="contained">Register</Button>
-      
-      <Typography>Login</Typography>
-      <TextField label="Username" onChange={(e) => {setLoginUser(e.target.value)}}/>
-      <TextField label="Password" type="password" onChange={(e) => {setLoginPass(e.target.value)}}/>
-      <Button onClick={login} variant="contained">Login</Button>
+      <Snackbar 
+        open={snackbar}
+        autoHideDuration={3000}
+        onClose={handleClose}
+      >
+        <Alert severity="error">
+          {snackMessage}
+        </Alert>
+      </Snackbar>
+
+      <Container maxWidth={"xs"}>
+        <Stack spacing={2} divider={<Divider/>}>
+          <Stack spacing={2}>
+            <Typography variant='h5'>Login</Typography>
+            <TextField label="Username" onChange={(e) => {setLoginUser(e.target.value)}}/>
+            <TextField label="Password" type="password" onChange={(e) => {setLoginPass(e.target.value)}}/>
+            <Button onClick={login} variant="contained">Login</Button>
+          </Stack>
+
+          <Stack spacing={2}>
+            <Typography variant='h5'>Register</Typography>
+            <TextField label="Username" onChange={(e) => {setRegisterUser(e.target.value)}}/>
+            <TextField label="Password" type="password" onChange={(e) => {setRegisterPass(e.target.value)}}/>
+            <Button onClick={register} variant="contained" fullWidth>Register</Button>
+          </Stack>
+        </Stack>
+      </Container>
     </Box>
   );
 }

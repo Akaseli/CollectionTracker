@@ -99,8 +99,6 @@ app.post("/api/login/", (req, res) => {
 
     // Username -> validate
     if (result.rows.length > 0){
-      console.log("User found")
-      console.log(result.rows)
       const password = req.body.password
       const userpassword = result.rows[0].password
 
@@ -123,7 +121,7 @@ app.post("/api/login/", (req, res) => {
         res.cookie('jwt', token, {
           httpOnly: true,
           secure: process.env.PRODUCTION ? true : false
-        }).send({message: "Login successful."})
+        }).send({message: "Login successful.", status: "success"})
 
       }
       //Incorrect password
@@ -140,6 +138,14 @@ app.post("/api/login/", (req, res) => {
 
 app.post("/api/register/", (req, res) => {
   //TODO validate password lenght and username lenght
+  if(req.body.username.length < 4){
+    res.send({message: "Username too short."})
+    return
+  }
+  if(req.body.password.length < 6){
+    res.send({message: "Password too short."})
+    return
+  }
 
   pool.query("SELECT * FROM users WHERE username = $1", [req.body.username], async (err, result) => {
     if(err){
@@ -160,7 +166,7 @@ app.post("/api/register/", (req, res) => {
           throw err
         }
         console.log("CREATED USER")
-        res.send({message: "Account Successfully created!"})
+        res.send({message: "Account Successfully created!", status: "success"})
       })
     }
   })
