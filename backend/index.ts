@@ -69,6 +69,16 @@ var options:StrategyOptions = {
   secretOrKey : process.env.SECRET
 }
 
+//User types
+declare global {
+  namespace Express{
+    interface User{
+      id: number,
+      name: string
+    }
+  }
+}
+
 passport.use("jwt", new JwtStrategy(options, (jwt_payload, done) => {
   //TODO CHECK if expired
 
@@ -116,7 +126,7 @@ app.post("/api/login/", (req, res) => {
         }
 
         //Expires in 1 day
-        const token = jwt.sign(payload, process.env.SECRET, { expiresIn : 24 * 60 * 1 })
+        const token = jwt.sign(payload, process.env.SECRET, { expiresIn : 1000 * 60 * 24 })
         
         res.cookie('jwt', token, {
           httpOnly: true,
@@ -172,10 +182,18 @@ app.post("/api/register/", (req, res) => {
   })
 })
 
+// Collection Routes
+app.post("/api/collection", passport.authenticate("jwt", {session: false}), (req, res) => {
+  const user = req.user?.id
 
-//Authenticated route
+
+})
+
+
+
+//Authenticated route test
 app.get("/api/secret/", passport.authenticate("jwt", {session: false}), (req, res) => {
-  res.send("Secret stuff")
+  res.send("Secret stuff requested by " + req.user?.id )
 })
 
 app.listen(port, () => {

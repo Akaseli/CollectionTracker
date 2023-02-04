@@ -1,6 +1,7 @@
 import { Alert, Box, Button, Container, Divider, Grid, Snackbar, SnackbarCloseReason, Stack, TextField, Typography } from '@mui/material';
 import axios from 'axios';
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
 
@@ -15,6 +16,8 @@ export const MainPage: React.FC<Props> = () => {
 
   const [snackbar, openSnackbar] = useState(false)
   const [snackMessage, changeMessage] = useState("")
+
+  const navigate = useNavigate()
 
   const register = () => {
     axios({
@@ -50,8 +53,7 @@ export const MainPage: React.FC<Props> = () => {
     }).then((response) => {
       //Successfull
       if(response.data.status == "success"){
-        //Fetch account info 
-
+        navigate("/collections/")
       }
       else{
         changeMessage(response.data.message);
@@ -70,7 +72,7 @@ export const MainPage: React.FC<Props> = () => {
 
   return (
     <Box>
-      <Typography variant="h4">Collection Tracker</Typography>
+      <Typography variant="h4">Sovelluksen nimi</Typography>
 
       <Snackbar 
         open={snackbar}
