@@ -1,6 +1,8 @@
 import { Box, Button, Typography } from '@mui/material';
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router';
+import io from "socket.io-client"
+
 
 interface Props {
 
@@ -8,6 +10,21 @@ interface Props {
 
 export const CollectionPage: React.FC<Props> = () => {
   const navigate = useNavigate()
+
+  const socket = io("ws://localhost:3000", {
+    reconnectionDelayMax: 10000,
+    withCredentials: true
+  })
+
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Connected")
+    })
+
+    return () => {
+
+    }
+  }, [])
 
   return(
     <Box>

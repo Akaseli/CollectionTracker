@@ -3,22 +3,38 @@ import * as dotenv from 'dotenv'
 dotenv.config({ path: __dirname + '/.env' })
 
 import express from "express";
+import http from "http";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import bodyParser, { urlencoded } from "body-parser";
 import session from "express-session";
-import passport from "passport";
 import { Pool } from "pg";
+import cookie from "cookie"
 
+
+//Express
+const app = express();
+const port = 3000;
+const server = http.createServer(app)
+
+// Bcrypt
 import * as bcrypt from "bcrypt";
 const salt = 10
 
+//Auth
+import passport from "passport";
 import jwt from "jsonwebtoken"
+import { StrategyOptions, Strategy as JwtStrategy } from "passport-jwt";
 
-import { StrategyOptions, Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
+//Socket.io
+import { Server } from 'socket.io';
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:8080",
+    credentials: true
+  },
+})
 
-const app = express();
-const port = 3000;
 
 //Database
 const pool = new Pool({
@@ -196,6 +212,19 @@ app.get("/api/secret/", passport.authenticate("jwt", {session: false}), (req, re
   res.send("Secret stuff requested by " + req.user?.id )
 })
 
-app.listen(port, () => {
+//Socket stuff
+io.on("connection", (socket) => {
+  //Cookies
+  if(!socket.handshake.headers.cookie) {
+    socket.disconnect()
+    return
+  }
+
+  let cookies = cookie.parse(socket.handshake.headers.cookie)
+  
+
+})
+
+server.listen(port, () => {
   console.log("Listening on port " + port);
 });
