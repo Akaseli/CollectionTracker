@@ -1,10 +1,12 @@
 import { Box, Button, IconButton, MenuItem, Select, SelectChangeEvent, Step, StepLabel, Stepper,TextField,Typography } from '@mui/material';
-import React, { useState } from 'react'
+import React, { ImgHTMLAttributes, useEffect, useRef, useState } from 'react'
 import { Field, InputFormat } from '../interfaces/Field';
 
 import DeleteIcon from '@mui/icons-material/Delete'
 import ReactCrop, { Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css'
+import axios from 'axios';
+import { useNavigate } from 'react-router';
 
 interface Props {
 
@@ -13,10 +15,18 @@ interface Props {
 const steps = ["Perustiedot", "Kokoelman kentät"]
 
 export const CreateCollectionPage: React.FC<Props> = () => {
+  const navigate = useNavigate()
+
   const [activeStep, setActiveStep] = useState(0)
 
   const next = () => {
-    setActiveStep((prevStep) => prevStep + 1)
+    if(activeStep != steps.length -1){
+      setActiveStep((prevStep) => prevStep + 1)
+    }
+    else{
+      createSet()
+    }
+    
   }
 
   const prev = () => {
@@ -28,11 +38,50 @@ export const CreateCollectionPage: React.FC<Props> = () => {
   const [description, setDescription] = useState("")
 
   const [image, setImage] = useState()
-  const [crop, setCrop] = useState<Crop>()
+  const [crop, setCrop] = useState<Crop>({
+    unit: "%",
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
+  })
   const [imageUrl, setUrl] = useState("")
+
+  const [scaleX, setXScale] = useState(0)
+  const [scaleY, setYScale] = useState(0)
+
+  const previewImage = useRef<HTMLImageElement>(null)
 
   //Form values
   const [fields, setFields] = useState<Field[]>([])
+
+  const createSet = () => {
+
+    //Todo error
+    if(!image) return
+    
+    axios.post(
+      "/api/collection",
+      {
+        name: name,
+        description: description,
+        image: image,
+        crop: JSON.stringify(crop),
+        fields: JSON.stringify(fields),
+        scaleX: scaleX,
+        scaleY: scaleY
+      },
+      {
+        headers: {
+          "content-type": "multipart/form-data"
+        }
+      }
+    ).then((response) => {
+      if(response.status == 200){
+        navigate("/collections/")
+      }
+    })
+  }
 
   const handleImage = (e:any) => {
     setUrl(URL.createObjectURL(e.target.files[0]))
@@ -68,6 +117,13 @@ export const CreateCollectionPage: React.FC<Props> = () => {
     setFields(newFields)
   }
 
+  useEffect(() => {
+    if(previewImage.current){
+      setXScale(previewImage.current.naturalWidth/previewImage.current.width)
+      setYScale(previewImage.current.naturalHeight/previewImage.current.height)
+    }
+  })
+
   const pages = [
     <Box mt={2}>
       <Typography variant='h5'>Perustiedot</Typography>
@@ -91,9 +147,16 @@ export const CreateCollectionPage: React.FC<Props> = () => {
         />
       </Button>
       <br/>
-      <ReactCrop crop={crop} onChange={c => setCrop(c)}>
-        <img src={imageUrl}/>
-      </ReactCrop>
+      <Box
+        sx={{
+          mt: 2,
+          maxWidth: "500px"
+        }}
+      >
+        <ReactCrop aspect={1} crop={crop} onChange={c => setCrop(c)}>
+          <img ref={previewImage} src={imageUrl}/>
+        </ReactCrop>
+      </Box>
     </Box>,
 
 
@@ -132,7 +195,7 @@ export const CreateCollectionPage: React.FC<Props> = () => {
   ]
 
   return(
-    <Box>
+    <Box m={2}>
       <Typography variant='h4'>Luo kokoelma</Typography>
       <Box mt={2}>
         <Stepper activeStep={activeStep}>
@@ -172,4 +235,8 @@ export const CreateCollectionPage: React.FC<Props> = () => {
       </Box>
     </Box>
   );
+}
+
+function DetailedHTMLProps<T>() {
+  throw new Error('Function not implemented.');
 }

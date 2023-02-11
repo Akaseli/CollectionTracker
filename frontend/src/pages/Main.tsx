@@ -71,7 +71,7 @@ export const MainPage: React.FC<Props> = () => {
   }
 
   return (
-    <Box>
+    <Box m={2}>
       <Typography variant="h4">Sovelluksen nimi</Typography>
 
       <Snackbar 

@@ -1,6 +1,8 @@
 -- Database
 CREATE DATABASE collectiontracker;
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- User table
 CREATE TABLE users (
   id integer GENERATED ALWAYS AS IDENTITY,
