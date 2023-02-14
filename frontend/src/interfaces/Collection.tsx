@@ -5,5 +5,6 @@ export interface Collection{
   description: string,
   pictureid: number,
   id: number,
-  template: Field[]
+  template: Field[],
+  owner: number
 }

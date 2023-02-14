@@ -41,3 +41,18 @@ CREATE TABLE pictures (
 
   PRIMARY KEY (id)
 );
+
+-- Invite table
+CREATE TABLE invites (
+  id integer GENERATED ALWAYS AS IDENTITY,
+  expires integer,
+  senderid integer,
+  collectionid integer,
+  targetid integer,
+
+  PRIMARY KEY (id),
+  FOREIGN KEY (senderid) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (targetid) REFERENCES users(id) ON DELETE CASCADE,
+
+  FOREIGN KEY (collectionid) REFERENCES collections(id) ON DELETE CASCADE
+);

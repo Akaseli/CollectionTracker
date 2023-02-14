@@ -94,7 +94,7 @@ declare global {
   namespace Express{
     interface User{
       id: number,
-      name: string
+      username: string
     }
   }
 }
@@ -262,7 +262,7 @@ app.post("/api/collection", passport.authenticate("jwt", {session: false}), asyn
 })
 
 app.get("/api/collections",  passport.authenticate("jwt", {session: false}), (req, res) => {
-  pool.query("SELECT id, pictureid, name, description FROM collections WHERE owner = $1", [req.user?.id], (err, response) => {
+  pool.query("SELECT id, pictureid, name, description, owner FROM collections WHERE owner = $1 OR (id IN (SELECT tableid FROM sharedtables WHERE userid = $1))", [req.user?.id], (err, response) => {
     if(err){
       throw err
     }
@@ -293,10 +293,72 @@ app.get("/api/static/:imageId", passport.authenticate("jwt", {session: false}), 
 })
 
 
+//Create invite
+app.post("/api/invite" , passport.authenticate("jwt", {session: false}), async (req, res) => {
+  const user = req.user
+
+  const invitedUser = req.body.user
+  const collection = req.body.collection
+
+  //Check if request user owns collection with the id of the request.
+  const { rows } = await pool.query("SELECT id, name FROM collections WHERE owner = $1 AND id = $2", [user?.id, collection])
+
+  //Find user 
+  const userResult = await pool.query("SELECT id FROM users WHERE username = $1", [invitedUser])
+
+  if(!rows[0] || !userResult.rows[0] || userResult.rows[0]["id"] == user?.id){
+    //No one to invite
+    res.sendStatus(200)
+    return
+  }
+
+  //Expires in a day
+  const expires = Math.floor(Date.now() / 1000) + 60*60*24
+
+  //Create invitation in database
+  const idRows = await pool.query("INSERT INTO invites(expires, senderid, collectionid, targetid) VALUES ($1, $2, $3, $4) RETURNING id", [expires, req.user?.id, collection, userResult.rows[0]["id"]])
+
+  //Send invitation
+  io.to(userResult.rows[0]["id"]).emit("invite", JSON.stringify({from: user?.username, collectionName: rows[0]["name"], inviteId: idRows.rows[0]["id"]}))
+
+  res.sendStatus(200)
+})
+
+app.get("/api/invites" , passport.authenticate("jwt", {session: false}), async (req, res) => {
+  const { rows } = await pool.query(`SELECT users.username AS from, collections.name AS "collectionName", invites.id AS "inviteId" FROM invites INNER JOIN collections ON invites.collectionid = collections.id INNER JOIN users ON users.id = invites.senderid WHERE targetid = $1 AND expires > $2`, [req.user?.id, Math.ceil(Date.now() / 1000)])
+
+  res.send(rows)
+})
+
+app.post("/api/invite/accept/:id",  passport.authenticate("jwt", {session: false}), async (req, res) => {
+  const user = req.user?.id
+ 
+  //TODO check expiring date
+  const { rows } = await pool.query("SELECT collectionid FROM invites WHERE targetId = $1 AND id = $2", [user, req.params.id])
+
+  if(rows){
+    const collection = rows[0]["collectionid"]
+
+    pool.query("INSERT INTO sharedtables(tableid, userid) VALUES($1, $2)", [collection, user])
+    //TODO send the table data thru websocket to user
+  }
+
+  pool.query("DELETE FROM invites WHERE targetid = $1 AND id = $2", [user, req.params.id])
+  res.sendStatus(200)
+})
+
+app.post("/api/invite/decline/:id",  passport.authenticate("jwt", {session: false}), async (req, res) => {
+  const user = req.user?.id
+
+  pool.query("DELETE FROM invites WHERE targetid = $1 AND id = $2", [user, req.params.id])
+  res.sendStatus(200)
+})
+
 //Authenticated route test
 app.get("/api/secret/", passport.authenticate("jwt", {session: false}), (req, res) => {
   res.send("Secret stuff requested by " + req.user?.id )
 })
+
 
 /*
 =============================
