@@ -1,8 +1,10 @@
 import { Badge, Box, Button, Card, CardActionArea, CardContent, CardHeader, CardMedia, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, List, ListItem, Typography } from '@mui/material';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import io from "socket.io-client"
+import { RootState } from '../app/store';
 import { Collection } from '../interfaces/Collection';
 import { Invite } from '../interfaces/Invite';
 
@@ -18,6 +20,8 @@ export const CollectionsPage: React.FC<Props> = () => {
   const [invitations, setInvitations] = useState<Invite[]>([])
 
   const [invDialog, openInvDialog] = useState(false)
+
+  const user = useSelector((state: RootState) => state.user)
 
   const handleClose = () => {
     openInvDialog(false)
@@ -48,13 +52,30 @@ export const CollectionsPage: React.FC<Props> = () => {
     axios.get("/api/collections").then((response) => {
       setCollections(response.data)
     })
+    .catch((error) => {
+      if(error.response.status === 401){
+        //Wait for app to redirect
+      }
+      else{
+        return Promise.reject(error)
+      }
+    })
 
     axios.get("/api/invites").then((response) => {
       setInvitations(response.data)
     })
+    .catch((error) => {
+      if(error.response.status === 401){
+        //Wait for app to redirect
+      }
+      else{
+        return Promise.reject(error)
+      }
+    })
 
     return () => {
       socket.removeAllListeners()
+      console.log("Socket closed")
     }
   }, [])
 
@@ -76,25 +97,28 @@ export const CollectionsPage: React.FC<Props> = () => {
 
   const cards = collections.map((collection) => {
     return (
-      <Card key={collection.id} sx={{width: 300}}>
-        <CardActionArea
-          onClick={() => {
-            navigate(`/collections/${collection.id}`)
-          }}
-        >
-          <CardMedia
-            component="img"
-            height="300"
-            width="300"
-            image={`/api/static/${collection.pictureid}`}
-          />
-          
-          <CardContent>
-            <Typography variant='h6'>{collection.name}</Typography>
-            <Typography>{collection.description}</Typography>
-          </CardContent>
-        </CardActionArea>
-      </Card>
+      <Grid item key={collection.id}>
+        <Card sx={{width: 300}}>
+          <CardActionArea
+            onClick={() => {
+              navigate(`/collections/${collection.id}`)
+            }}
+          >
+            <CardMedia
+              component="img"
+              height="300"
+              width="300"
+              image={`/api/static/${collection.pictureid}`}
+            />
+            
+            <CardContent>
+              <Typography variant='h6'>{collection.name}</Typography>
+              <Typography>{collection.description}</Typography>
+              <Typography variant='subtitle2'>{collection.owner === user.id? "Omistettu" : "Jaettu sinulle"}</Typography>
+            </CardContent>
+          </CardActionArea>
+        </Card>
+      </Grid>
     );
   })
 
@@ -108,9 +132,9 @@ export const CollectionsPage: React.FC<Props> = () => {
         </Badge>
       </Grid>
     
-      <Box mt={2}>
+      <Grid container sx={{mt: 2}} spacing={2}>
         {cards}
-      </Box>
+      </Grid>
 
       <Dialog open={invDialog}>
         <DialogTitle>Kutsut</DialogTitle>

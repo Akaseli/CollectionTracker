@@ -154,7 +154,7 @@ app.post("/api/login/", (req, res) => {
         res.cookie('jwt', token, {
           httpOnly: true,
           secure: process.env.PRODUCTION ? true : false
-        }).send({message: "Login successful.", status: "success"})
+        }).send({message: "Login successful.", status: "success", id: payload.id, username: payload.username})
 
       }
       //Incorrect password
@@ -205,6 +205,11 @@ app.post("/api/register/", (req, res) => {
   })
 })
 
+app.get("/api/user", passport.authenticate("jwt", {session: false}), async (req, res) => {
+  res.send({id: req.user?.id, username: req.user?.username})
+})
+
+
 // Collection Routes
 app.post("/api/collection", passport.authenticate("jwt", {session: false}), async (req, res) => {
   const user = req.user?.id
@@ -249,8 +254,6 @@ app.post("/api/collection", passport.authenticate("jwt", {session: false}), asyn
     imageId = rows[0].id
   }
   
-  console.log("Image ", imageId)
-
   //Create new collection
   pool.query("INSERT INTO collections(pictureId, name, description, owner, template) VALUES ($1, $2, $3, $4, $5)", [imageId, name, description, user, template], (err, res) => {
     if(err){
@@ -261,6 +264,69 @@ app.post("/api/collection", passport.authenticate("jwt", {session: false}), asyn
   res.sendStatus(200)
 })
 
+//Add item to collection
+app.post("/api/collections/:id/create", passport.authenticate("jwt", {session: false}), async (req, res) => {
+  const user = req.user?.id
+  const name = req.body.name
+  const description = req.body.description
+  const template = req.body.values
+  let imageId = null
+
+  //Check if user has rights to said collection
+  const { rows } = await pool.query("SELECT id FROM collections WHERE (owner = $1 OR (id IN (SELECT tableid FROM sharedtables WHERE userid = $1))) AND id = $2", [req.user?.id, req.params.id])
+
+  if(!rows){
+    res.sendStatus(403)
+    return
+  }
+
+  //Image for set exists
+  if(req.files){
+    let file = req.files["image"]
+    
+    //@ts-ignore File.buffer doesnt exist in type definitions
+    const image = sharp(file.data)
+    const crop = JSON.parse(req.body.crop)
+
+
+    //Extract
+    if(crop.width != 0 && crop.height != 0){
+      image.extract({
+        left: Math.round(crop.x * req.body.scaleX),
+        top: Math.round(crop.y  * req.body.scaleY),
+        width: Math.round(crop.width * req.body.scaleX),
+        height: Math.round(crop.height * req.body.scaleY)
+      })
+    }
+    else{
+      image.resize(500, 500, {
+        fit: sharp.fit.cover,
+        withoutReduction: false
+      })
+    }
+
+    //TODO maybe check if file already exists
+    const fileName = v4() + ".jpeg";
+
+    image
+      .toFormat("jpeg")
+      .toFile(`./backend/usercontent/${fileName}`)
+
+    const { rows } = await pool.query("INSERT INTO pictures(filename) VALUES ($1) RETURNING id", [fileName])
+    imageId = rows[0].id
+  }
+
+  //Create new collection
+  pool.query("INSERT INTO collectible(pictureid, collectionid, name, description, creator, data) VALUES ($1, $2, $3, $4, $5, $6)", [imageId, req.params.id, name, description, user, template], (err, res) => {
+    if(err){
+      throw err
+    }
+    //TODO send websocket data
+
+  })
+})
+
+//Get collections shared + owned
 app.get("/api/collections",  passport.authenticate("jwt", {session: false}), (req, res) => {
   pool.query("SELECT id, pictureid, name, description, owner FROM collections WHERE owner = $1 OR (id IN (SELECT tableid FROM sharedtables WHERE userid = $1))", [req.user?.id], (err, response) => {
     if(err){
@@ -272,15 +338,17 @@ app.get("/api/collections",  passport.authenticate("jwt", {session: false}), (re
 
 })
 
-app.get("/api/collections/:id",  passport.authenticate("jwt", {session: false}), (req, res) => {
-  pool.query("SELECT id, pictureid, name, description, template FROM collections WHERE owner = $1 AND id = $2", [req.user?.id, req.params.id], (err, response) => {
-    if(err){
-      throw err
-    }
+app.get("/api/collections/:id",  passport.authenticate("jwt", {session: false}), async (req, res) => {
+  const { rows } = await pool.query("SELECT id, pictureid, name, description, template, owner FROM collections WHERE (owner = $1 OR (id IN (SELECT tableid FROM sharedtables WHERE userid = $1))) AND id = $2", [req.user?.id, req.params.id])
 
-    res.send(response.rows)
-  })
+  if(!rows){
+    res.sendStatus(403)
+    return
+  }
+  
+  const collectibles = await pool.query("SELECT id, name, description, data, pictureid FROM collectible WHERE collectionid = $1", [req.params.id])
 
+  res.send({...rows[0], collectibles: collectibles.rows})
 })
 
 //Image route
@@ -307,7 +375,7 @@ app.post("/api/invite" , passport.authenticate("jwt", {session: false}), async (
   const userResult = await pool.query("SELECT id FROM users WHERE username = $1", [invitedUser])
 
   if(!rows[0] || !userResult.rows[0] || userResult.rows[0]["id"] == user?.id){
-    //No one to invite
+    //No one to invite/no permission
     res.sendStatus(200)
     return
   }
@@ -378,6 +446,11 @@ io.on("connection", async (socket) => {
     throw new Error("Secret not defined.")
   }
   
+  if(!cookies["jwt"]){
+    socket.disconnect()
+    return
+  }
+
   const user = jwt.verify(cookies["jwt"], process.env.SECRET)
   //TODO handle expired error
   

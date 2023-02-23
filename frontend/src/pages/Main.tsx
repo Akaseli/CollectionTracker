@@ -1,7 +1,9 @@
 import { Alert, Box, Button, Container, Divider, Grid, Snackbar, SnackbarCloseReason, Stack, TextField, Typography } from '@mui/material';
 import axios from 'axios';
 import React, { useState } from 'react'
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { userLogin } from '../app/userSlice';
 
 interface Props {
 
@@ -18,6 +20,7 @@ export const MainPage: React.FC<Props> = () => {
   const [snackMessage, changeMessage] = useState("")
 
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const register = () => {
     axios({
@@ -53,6 +56,8 @@ export const MainPage: React.FC<Props> = () => {
     }).then((response) => {
       //Successfull
       if(response.data.status == "success"){
+        dispatch(userLogin({id: response.data.id, username: response.data.username}))
+
         navigate("/collections/")
       }
       else{

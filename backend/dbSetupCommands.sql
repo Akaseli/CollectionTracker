@@ -15,7 +15,7 @@ CREATE TABLE users (
 -- Collection Table
 CREATE TABLE collections (
   id integer GENERATED ALWAYS AS IDENTITY,
-  pictureId integer,
+  pictureid integer,
   "name" text,
   "description" text,
   "owner" integer,
@@ -23,7 +23,7 @@ CREATE TABLE collections (
 
   PRIMARY KEY (id),
   FOREIGN KEY ("owner") REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (pictureId) REFERENCES pictures(id) ON DELETE SET NULL
+  FOREIGN KEY (pictureid) REFERENCES pictures(id) ON DELETE SET NULL
 );
 
 CREATE TABLE sharedtables (
@@ -55,4 +55,22 @@ CREATE TABLE invites (
   FOREIGN KEY (targetid) REFERENCES users(id) ON DELETE CASCADE,
 
   FOREIGN KEY (collectionid) REFERENCES collections(id) ON DELETE CASCADE
+);
+
+-- NOT CREATED
+
+--Collectible table
+CREATE TABLE collectible (
+  id integer GENERATED ALWAYS AS IDENTITY,
+  collectionid integer,
+  creator integer,
+  "name" text,
+  "description" text,
+  pictureid integer,
+  "data" jsonb,
+
+  PRIMARY KEY (id),
+  FOREIGN KEY (collectionid) REFERENCES collections(id) ON DELETE CASCADE,
+  FOREIGN KEY (creator) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (pictureid) REFERENCES pictures(id) ON DELETE SET NULL
 );

@@ -3,6 +3,10 @@ import React, { ImgHTMLAttributes, useEffect, useRef, useState } from 'react'
 import { Field, InputFormat } from '../interfaces/Field';
 
 import DeleteIcon from '@mui/icons-material/Delete'
+import ArrowUp from '@mui/icons-material/ArrowUpward'
+import ArrowDown from '@mui/icons-material/ArrowDownward'
+
+
 import ReactCrop, { Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css'
 import axios from 'axios';
@@ -89,7 +93,7 @@ export const CreateCollectionPage: React.FC<Props> = () => {
   }
 
   const addField = () => {
-    let field:Field = {name: "", type: InputFormat.STRING}
+    let field:Field = {name: "", type: InputFormat.TEXT, sort: (fields.length == 0? 0 : fields[fields.length-1].id + 1), id: (fields.length == 0? 0 : fields[fields.length-1].id + 1)}
     setFields([...fields, field])
   }
 
@@ -109,10 +113,10 @@ export const CreateCollectionPage: React.FC<Props> = () => {
     setFields(newFields)
   }
 
-  const deleteField = (id:number) => {
+  const deleteField = (index:number) => {
     let newFields = [...fields]
 
-    newFields.splice(id, 1)
+    newFields.splice(index, 1)
 
     setFields(newFields)
   }
@@ -123,6 +127,14 @@ export const CreateCollectionPage: React.FC<Props> = () => {
       setYScale(previewImage.current.naturalHeight/previewImage.current.height)
     }
   })
+
+  const changePriority = (index: number, amount: number) => {
+    let newFields = [...fields]
+
+    newFields[index].sort += amount
+
+    setFields(newFields)
+  }
 
   const pages = [
     <Box mt={2}>
@@ -160,18 +172,19 @@ export const CreateCollectionPage: React.FC<Props> = () => {
     </Box>,
 
 
-
+    
     <Box mt={2}>
       <Typography variant='h5'>Kentät</Typography>
       <Button variant='contained' onClick={addField}>Lisää</Button>
       <Box sx={{mt: 2, display: "flex", flexDirection: "column", gap: 1.5}}>
-        {fields.map((field, id) => {
+        {
+        fields.map((field, id) => {
           return (
             <Box 
               sx={{display: "flex", flexDirection: "row", alignItems: "center", gap: 2}}
               key={id}
             >
-              <Typography>{id + 1}</Typography>
+              <Typography>{field.id}</Typography>
               <TextField defaultValue={field.name} onChange={(e) => {changeName(e, id)}}></TextField>
 
               <Typography>Kentän tyyppi</Typography>
@@ -179,13 +192,23 @@ export const CreateCollectionPage: React.FC<Props> = () => {
                 value={field.type}
                 onChange={(e) => changeType(e, id)}
               >
-                <MenuItem value={InputFormat.STRING}>Teksti</MenuItem>
+                <MenuItem value={InputFormat.TEXT}>Teksti</MenuItem>
                 <MenuItem value={InputFormat.NUMBER}>Numero</MenuItem>
                 <MenuItem value={InputFormat.DATE}>Päivämäärä</MenuItem>
               </Select>
 
               <IconButton onClick={() => {deleteField(id)}}>
                 <DeleteIcon />
+              </IconButton>
+
+              <Typography>{"Järjestys: " + field.sort}</Typography>
+
+              <IconButton onClick={() => {changePriority(id, 1)}}>
+                <ArrowUp />
+              </IconButton>
+
+              <IconButton onClick={() => {changePriority(id, -1)}}>
+                <ArrowDown />
               </IconButton>
             </Box>
           );
@@ -237,6 +260,3 @@ export const CreateCollectionPage: React.FC<Props> = () => {
   );
 }
 
-function DetailedHTMLProps<T>() {
-  throw new Error('Function not implemented.');
-}
