@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardActionArea, CardContent, CardMedia, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid, Input, InputLabel, TextField, Typography } from '@mui/material';
+import { Box, Button, Card, CardActionArea, CardContent, CardMedia, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, Input, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react'
 import ReactCrop, { Crop } from 'react-image-crop';
@@ -44,11 +44,22 @@ export const CollectionPage: React.FC<Props> = () => {
 
   const previewImage = useRef<HTMLImageElement>(null)
 
+  const [filter, setFilter] = useState('')
+  const [filterFields, setFields] = useState(["name", "description"])
+  const [filteredField, setFiltered] = useState("name")
 
   useEffect(() => {
     axios.get(`/api/collections/${id}`).then((response) => {
-      console.log(response.data)
       setCollection(response.data)
+
+      //TODO proper types
+      let customFields:string[] = ["name", "description"]
+
+      response.data["template"].forEach((field:any) => {
+        customFields.push(field["name"])
+      });
+    
+      setFields([...customFields])
     })
     .catch((error) => {
       if(error.response.status === 401){
@@ -168,9 +179,45 @@ export const CollectionPage: React.FC<Props> = () => {
         />
       </Box>
     );
+  }) 
+
+  const selectOptions = filterFields.map((fieldName) => {
+    switch(fieldName){
+      case "name":
+        return <MenuItem value={fieldName}>Nimi</MenuItem>
+      case "description":
+        return <MenuItem value={fieldName}>Kuvaus</MenuItem>
+      default:
+        return <MenuItem value={fieldName}>{fieldName}</MenuItem>
+    }
   })
 
-  const collectibles = collection.collectibles?.map((collectible) => {
+  const collectibles = collection.collectibles?.filter((collectible) => {
+    if(filteredField === "name" || filteredField === "description"){
+      return filter.toLowerCase() === ""
+      ? collectible
+      : collectible[filteredField].toLowerCase().includes(filter.toLowerCase())
+    }
+    else{
+      let fieldIndex = collection.template.find((item) => item.name === filteredField)
+      if(!fieldIndex){
+        return collectible
+      }
+
+      return filter.toLowerCase() === ""
+      ? collectible
+      : collectible.data[fieldIndex.id].toString().toLowerCase().includes(filter.toLowerCase())
+    }
+
+    
+  }).map((collectible) => {
+
+    let custom = collection.template.map((field, index) => {
+      return (
+        <Typography>{field.name + ": " + collectible.data[field.id]}</Typography>
+      );
+    })
+
     return (
       <Grid item key={collectible.id}>
         <Card sx={{width: 300}}>
@@ -189,6 +236,8 @@ export const CollectionPage: React.FC<Props> = () => {
             <CardContent>
               <Typography variant='h6'>{collectible.name}</Typography>
               <Typography>{collectible.description}</Typography>
+              <Divider sx={{m: 1}}/>
+              {custom}
             </CardContent>
           </CardActionArea>
         </Card>
@@ -237,6 +286,25 @@ export const CollectionPage: React.FC<Props> = () => {
         )
       }
 
+      <Box sx={{display: "flex", gap: 2, mt: 2}}>
+        <Select
+          defaultValue={"name"}
+          onChange={(e) => {
+            setFiltered(e.target.value)
+          }}
+        >
+          {selectOptions}
+        </Select>
+
+        <TextField
+          fullWidth
+          label="Hae keräiltävää"
+          onChange={(e) => {
+            setFilter(e.target.value)
+          }}
+      />
+      </Box>
+      
       <Grid container sx={{mt: 2}} spacing={2}>
         {collectibles}
       </Grid>

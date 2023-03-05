@@ -1,10 +1,12 @@
-import { Badge, Box, Button, Card, CardActionArea, CardContent, CardHeader, CardMedia, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, List, ListItem, Typography } from '@mui/material';
+import { Badge, Box, Button, Card, CardActionArea, CardContent, CardMedia, Grid, Typography } from '@mui/material';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import io from "socket.io-client"
 import { RootState } from '../app/store';
+import { InviteDialog } from '../components/Dialogs/InviteDialog';
+import { InviteComponent } from '../components/Invite';
 import { Collection } from '../interfaces/Collection';
 import { Invite } from '../interfaces/Invite';
 
@@ -136,33 +138,13 @@ export const CollectionsPage: React.FC<Props> = () => {
         {cards}
       </Grid>
 
-      <Dialog open={invDialog}>
-        <DialogTitle>Kutsut</DialogTitle>
-        <DialogContent>
-          {
-            invitations.length > 0 ? (
-              <List>
-                {invitations.map((invite) => {
-                  return (
-                    <Box>
-                      <Typography>{`${invite.from} kutsui sinut kokoelmaan ${invite.collectionName}`}</Typography>
-                      <Button onClick={() => acceptInvite(invite.inviteId)} sx={{m: 1}} variant="contained" color="success">Hyväksy</Button>
-                      <Button onClick={() => declineInvite(invite.inviteId)} sx={{m: 1}} variant="contained" color="error">Hylkää</Button>
-                    </Box>
-                  )
-                })}
-              </List>
-            )
-            :
-            (
-              <Typography>No invitations received</Typography>
-            )
-          }
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Sulje</Button>
-        </DialogActions>
-      </Dialog>
+      <InviteDialog
+        invitations={invitations}
+        onDialogClose={handleClose}
+        open={invDialog}
+        onInviteAccept={acceptInvite}
+        onInviteDecline={declineInvite}
+      />
     </Box>
   );
 }

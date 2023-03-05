@@ -57,8 +57,6 @@ CREATE TABLE invites (
   FOREIGN KEY (collectionid) REFERENCES collections(id) ON DELETE CASCADE
 );
 
--- NOT CREATED
-
 --Collectible table
 CREATE TABLE collectible (
   id integer GENERATED ALWAYS AS IDENTITY,
