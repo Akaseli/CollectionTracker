@@ -11,9 +11,9 @@ ReactDOM.render(
   <ThemeProvider theme={theme}>
     <CssBaseline/>
     <BrowserRouter>
-    <Provider store={store}>
-      <App/>
-    </Provider>
+      <Provider store={store}>
+        <App/>
+      </Provider>
     </BrowserRouter>
   </ThemeProvider>,
   document.getElementById('root')

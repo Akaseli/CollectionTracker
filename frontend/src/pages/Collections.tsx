@@ -1,12 +1,12 @@
-import { Badge, Box, Button, Card, CardActionArea, CardContent, CardMedia, Grid, Typography } from '@mui/material';
+import { Badge, Box, Button, Grid, Typography } from '@mui/material';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import io from "socket.io-client"
 import { RootState } from '../app/store';
-import { InviteDialog } from '../components/Dialogs/InviteDialog';
-import { InviteComponent } from '../components/Invite';
+import { CollectionCard } from '../components/CollectionCard';
+import { InvitesDialog } from '../components/Dialogs/InvitesDialog';
 import { Collection } from '../interfaces/Collection';
 import { Invite } from '../interfaces/Invite';
 
@@ -97,30 +97,11 @@ export const CollectionsPage: React.FC<Props> = () => {
     })
   }
 
-  const cards = collections.map((collection) => {
+  const collectionCards = collections.map((collection) => {
     return (
-      <Grid item key={collection.id}>
-        <Card sx={{width: 300}}>
-          <CardActionArea
-            onClick={() => {
-              navigate(`/collections/${collection.id}`)
-            }}
-          >
-            <CardMedia
-              component="img"
-              height="300"
-              width="300"
-              image={`/api/static/${collection.pictureid}`}
-            />
-            
-            <CardContent>
-              <Typography variant='h6'>{collection.name}</Typography>
-              <Typography>{collection.description}</Typography>
-              <Typography variant='subtitle2'>{collection.owner === user.id? "Omistettu" : "Jaettu sinulle"}</Typography>
-            </CardContent>
-          </CardActionArea>
-        </Card>
-      </Grid>
+      <CollectionCard 
+        collection={collection}
+      />
     );
   })
 
@@ -135,10 +116,10 @@ export const CollectionsPage: React.FC<Props> = () => {
       </Grid>
     
       <Grid container sx={{mt: 2}} spacing={2}>
-        {cards}
+        {collectionCards}
       </Grid>
 
-      <InviteDialog
+      <InvitesDialog
         invitations={invitations}
         onDialogClose={handleClose}
         open={invDialog}

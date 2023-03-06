@@ -3,8 +3,10 @@ import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react'
 import ReactCrop, { Crop } from 'react-image-crop';
 import { useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { RootState } from '../app/store';
+import { CollectibleCard } from '../components/CollectibleCard';
+import { InviteDialog } from '../components/Dialogs/InviteDialog';
 import { Collection } from '../interfaces/Collection';
 
 interface Props {
@@ -192,6 +194,7 @@ export const CollectionPage: React.FC<Props> = () => {
     }
   })
 
+  //Filtering and them card
   const collectibles = collection.collectibles?.filter((collectible) => {
     if(filteredField === "name" || filteredField === "description"){
       return filter.toLowerCase() === ""
@@ -208,40 +211,9 @@ export const CollectionPage: React.FC<Props> = () => {
       ? collectible
       : collectible.data[fieldIndex.id].toString().toLowerCase().includes(filter.toLowerCase())
     }
-
-    
   }).map((collectible) => {
-
-    let custom = collection.template.map((field, index) => {
-      return (
-        <Typography>{field.name + ": " + collectible.data[field.id]}</Typography>
-      );
-    })
-
     return (
-      <Grid item key={collectible.id}>
-        <Card sx={{width: 300}}>
-          <CardActionArea
-            onClick={() => {
-              
-            }}
-          >
-            <CardMedia
-              component="img"
-              height="300"
-              width="300"
-              image={`/api/static/${collectible.pictureid}`}
-            />
-            
-            <CardContent>
-              <Typography variant='h6'>{collectible.name}</Typography>
-              <Typography>{collectible.description}</Typography>
-              <Divider sx={{m: 1}}/>
-              {custom}
-            </CardContent>
-          </CardActionArea>
-        </Card>
-      </Grid>
+      <CollectibleCard collectible={collectible} template={collection.template}/>
     );
   })
 
@@ -260,29 +232,13 @@ export const CollectionPage: React.FC<Props> = () => {
 
       {
         user.id === collection.owner && (
-          <Dialog open={dialog} onClose={handleClose}>
-            <DialogTitle>Kutsu joku tähän kokoelmaan!</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Syötä kutsuttavan henkilön käyttäjätunnus alle.
-              </DialogContentText>
-              <TextField
-                autoFocus
-                margin='dense'
-                fullWidth
-                variant='standard'
-                label="Käyttäjätunnus"
-                defaultValue={dialogInput}
-                onChange={(e) => {
-                  changeInput(e.target.value)
-                }}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose}>Peru</Button>
-              <Button onClick={handleInvite}>Kutsu</Button>
-            </DialogActions>
-          </Dialog>
+          <InviteDialog
+            open={dialog}
+            onClose={handleClose}
+            username={dialogInput}
+            onUsernameChange={(e) => {changeInput(e.target.value)}}
+            onSubmit={handleInvite}
+          />
         )
       }
 
@@ -367,7 +323,7 @@ export const CollectionPage: React.FC<Props> = () => {
           <DialogContentText>
             Käyttäjän itse määrittelemät kentät
           </DialogContentText>
-
+          
           {
             fields
           }

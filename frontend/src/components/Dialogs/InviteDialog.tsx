@@ -1,47 +1,38 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, List, Typography } from '@mui/material';
-import axios from 'axios';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
 import React from 'react'
-import { Invite } from '../../interfaces/Invite';
-import { InviteComponent } from '../Invite';
 
 interface Props {
-  open: boolean
-  invitations: Invite[]
-  onInviteAccept: (arg0: number) => void,
-  onInviteDecline: (arg0: number) => void
-  onDialogClose: () => void
+  open: boolean,
+  onClose: () => void,
+
+  username: string,
+  onUsernameChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+
+  onSubmit: () => void
 }
 
-export const InviteDialog: React.FC<Props> = ({open, invitations, onInviteAccept, onInviteDecline, onDialogClose}) => {
-  const invites = invitations.map((invite) => {
-    return (
-      <InviteComponent
-        invite={invite}
-        onAccept={onInviteAccept}
-        onDecline={onInviteDecline}
-      />
-    );
-  })
-
+export const InviteDialog: React.FC<Props> = ({open, onClose, username, onUsernameChange, onSubmit}) => {
   return(
-    <Dialog open={open}>
-        <DialogTitle>Kutsut</DialogTitle>
-        <DialogContent>
-          {
-            invitations.length > 0 ? (
-              <List>
-                {invites}
-              </List>
-            )
-            :
-            (
-              <Typography>No invitations received</Typography>
-            )
-          }
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onDialogClose}>Sulje</Button>
-        </DialogActions>
+    <Dialog open={open} onClose={onClose}>
+      <DialogTitle>Kutsu joku tähän kokoelmaan!</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          Syötä kutsuttavan henkilön käyttäjätunnus alle.
+        </DialogContentText>
+        <TextField
+          autoFocus
+          margin='dense'
+          fullWidth
+          variant='standard'
+          label="Käyttäjätunnus"
+          defaultValue={username}
+          onChange={onUsernameChange}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Peru</Button>
+        <Button onClick={onSubmit}>Kutsu</Button>
+      </DialogActions>
     </Dialog>
   );
 }
