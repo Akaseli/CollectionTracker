@@ -1,5 +1,5 @@
 import { Box, Button, IconButton, MenuItem, Select, SelectChangeEvent, Step, StepLabel, Stepper,TextField,Typography } from '@mui/material';
-import React, { ImgHTMLAttributes, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Field, InputFormat } from '../interfaces/Field';
 
 import DeleteIcon from '@mui/icons-material/Delete'

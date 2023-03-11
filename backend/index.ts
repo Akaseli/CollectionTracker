@@ -12,6 +12,9 @@ import { Pool } from "pg";
 import cookie from "cookie"
 import fileUpload from 'express-fileupload';
 
+//File management
+import fs from "fs"
+
 //Express
 const app = express();
 const port = 3000;
@@ -326,6 +329,43 @@ app.post("/api/collections/:id/create", passport.authenticate("jwt", {session: f
   })
 })
 
+//Delete Item from collection
+app.delete("/api/collections/:id/delete/:collectible",  passport.authenticate("jwt", {session: false}), async (req, res) => {
+  const user = req.user?.id
+  const collection = req.params.id
+  const collectible = req.params.collectible
+
+  //Check for rights
+  const { rows } = await pool.query("SELECT id FROM collections WHERE (owner = $1 OR (id IN (SELECT tableid FROM sharedtables WHERE userid = $1))) AND id = $2", [user, collection])
+
+  if(!rows){
+    res.sendStatus(403)
+    return
+  }
+
+  //Get image id
+  const imageId = await pool.query("DELETE FROM collectible WHERE id = $1 AND collectionid = $2 RETURNING pictureid", [collectible, collection])
+  const pictureId = imageId.rows[0]["pictureid"]
+  
+  //Delete Image
+  const filename = await pool.query("DELETE FROM pictures WHERE id = $1 RETURNING filename", [pictureId])
+  const parsedFilename = filename.rows[0]["filename"]
+
+  console.log(parsedFilename)
+
+  fs.unlink(`./backend/usercontent/${parsedFilename}`, (err) => {
+    if(err){
+      //Handle properly
+    }
+
+    console.log("FILE DELETED SUCCESSFULLY")
+  })
+  
+  //TODO send websocket data
+
+  res.send(200)
+})
+
 //Get collections shared + owned
 app.get("/api/collections",  passport.authenticate("jwt", {session: false}), (req, res) => {
   pool.query("SELECT id, pictureid, name, description, owner FROM collections WHERE owner = $1 OR (id IN (SELECT tableid FROM sharedtables WHERE userid = $1))", [req.user?.id], (err, response) => {
@@ -338,7 +378,7 @@ app.get("/api/collections",  passport.authenticate("jwt", {session: false}), (re
 
 })
 
-app.get("/api/collections/:id",  passport.authenticate("jwt", {session: false}), async (req, res) => {
+app.get("/api/collections/:id", passport.authenticate("jwt", {session: false}), async (req, res) => {
   const { rows } = await pool.query("SELECT id, pictureid, name, description, template, owner FROM collections WHERE (owner = $1 OR (id IN (SELECT tableid FROM sharedtables WHERE userid = $1))) AND id = $2", [req.user?.id, req.params.id])
 
   if(!rows){
@@ -398,7 +438,7 @@ app.get("/api/invites" , passport.authenticate("jwt", {session: false}), async (
   res.send(rows)
 })
 
-app.post("/api/invite/accept/:id",  passport.authenticate("jwt", {session: false}), async (req, res) => {
+app.post("/api/invite/accept/:id", passport.authenticate("jwt", {session: false}), async (req, res) => {
   const user = req.user?.id
  
   //TODO check expiring date
@@ -415,7 +455,7 @@ app.post("/api/invite/accept/:id",  passport.authenticate("jwt", {session: false
   res.sendStatus(200)
 })
 
-app.post("/api/invite/decline/:id",  passport.authenticate("jwt", {session: false}), async (req, res) => {
+app.post("/api/invite/decline/:id", passport.authenticate("jwt", {session: false}), async (req, res) => {
   const user = req.user?.id
 
   pool.query("DELETE FROM invites WHERE targetid = $1 AND id = $2", [user, req.params.id])

@@ -1,14 +1,19 @@
-import { Card, CardActionArea, CardContent, CardMedia, Divider, Grid, Typography } from '@mui/material';
+import { Card, CardActionArea, CardActions, CardContent, CardMedia, Divider, Grid, Typography } from '@mui/material';
+import IconButton from '@mui/material/IconButton';
 import React from 'react'
 import { Collectible } from '../interfaces/Collection';
 import { Field } from '../interfaces/Field';
+import Delete from '@mui/icons-material/Delete';
 
 interface Props {
   collectible: Collectible,
   template: Field[]
+  onDelete: () => void
 }
 
-export const CollectibleCard: React.FC<Props> = ({collectible, template}) => {
+export const CollectibleCard: React.FC<Props> = ({collectible, template, onDelete}) => {
+
+
   let custom = template.map((field, index) => {
     return (
       <Typography>{field.name + ": " + collectible.data[field.id]}</Typography>
@@ -37,6 +42,11 @@ export const CollectibleCard: React.FC<Props> = ({collectible, template}) => {
             {custom}
           </CardContent>
         </CardActionArea>
+        <CardActions>
+          <IconButton onClick={onDelete}>
+            <Delete />
+          </IconButton>
+        </CardActions>
       </Card>
     </Grid>
   );

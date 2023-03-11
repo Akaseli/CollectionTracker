@@ -1,14 +1,14 @@
-import { Box, Button, Card, CardActionArea, CardContent, CardMedia, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, Input, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Grid, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import axios from 'axios';
-import React, { useEffect, useRef, useState } from 'react'
-import ReactCrop, { Crop } from 'react-image-crop';
+import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { RootState } from '../app/store';
 import { CollectibleCard } from '../components/CollectibleCard';
 import { CreateCollectibleDialog } from '../components/Dialogs/CreateCollectibleDialog';
+import { DeleteCollectibleDialog } from '../components/Dialogs/DeleteCollectibleDialog';
 import { InviteDialog } from '../components/Dialogs/InviteDialog';
-import { Collection } from '../interfaces/Collection';
+import { Collectible, Collection } from '../interfaces/Collection';
 
 interface Props {
 
@@ -30,6 +30,9 @@ export const CollectionPage: React.FC<Props> = () => {
   const [filter, setFilter] = useState('')
   const [filterFields, setFields] = useState(["name", "description"])
   const [filteredField, setFiltered] = useState("name")
+
+  const [deleteDialog, openDeleteDialog] = useState(false)
+  const [activeCollectible, setActiveCollectible] = useState<Collectible|undefined>()
 
   useEffect(() => {
     axios.get(`/api/collections/${id}`).then((response) => {
@@ -137,6 +140,11 @@ export const CollectionPage: React.FC<Props> = () => {
     }
   })
 
+  const handleDelete = (collectible: Collectible) => {
+    setActiveCollectible(collectible)
+    openDeleteDialog(true)
+  }
+
   //Filtering and them card
   const collectibles = collection.collectibles?.filter((collectible) => {
     if(filteredField === "name" || filteredField === "description"){
@@ -158,7 +166,7 @@ export const CollectionPage: React.FC<Props> = () => {
     }
   }).map((collectible) => {
     return (
-      <CollectibleCard collectible={collectible} template={collection.template}/>
+      <CollectibleCard collectible={collectible} template={collection.template} onDelete={() => {handleDelete(collectible)}}/>
     );
   })
 
@@ -210,14 +218,23 @@ export const CollectionPage: React.FC<Props> = () => {
         {collectibles}
       </Grid>
 
-      
+      {
+        activeCollectible && (
+          <DeleteCollectibleDialog 
+            collectible={activeCollectible}
+            onClose={() => {openDeleteDialog(false)}}
+            open={deleteDialog}
+            collectionId={id}
+          />
+        )
+      }
+
       <CreateCollectibleDialog 
         fields={fields}
         onClose={handleAddCollectibleClose}
         uploadUrl={`/api/collections/${id}/create`}
         open={addDialog}
       />
-
     </Box>
   );
 }
