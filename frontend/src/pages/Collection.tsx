@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { RootState } from '../app/store';
 import { CollectibleCard } from '../components/CollectibleCard';
+import { CreateCollectibleDialog } from '../components/Dialogs/CreateCollectibleDialog';
 import { InviteDialog } from '../components/Dialogs/InviteDialog';
 import { Collection } from '../interfaces/Collection';
 
@@ -22,29 +23,9 @@ export const CollectionPage: React.FC<Props> = () => {
   const [dialogInput, changeInput] = useState("")
 
   const [addDialog, openAddDialog] = useState(false)
-  const [addName, setAddName] = useState("")
-  const [addDescription, setAddDescription] = useState("")
   const [addCustom, setCustom] = useState({})
 
   const user = useSelector((state: RootState) => state.user)
-
-
-  //PIcture stuff
-  const [image, setImage] = useState()
-
-  const [crop, setCrop] = useState<Crop>({
-    unit: "%",
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0
-  })
-  const [imageUrl, setUrl] = useState("")
-
-  const [scaleX, setXScale] = useState(0)
-  const [scaleY, setYScale] = useState(0)
-
-  const previewImage = useRef<HTMLImageElement>(null)
 
   const [filter, setFilter] = useState('')
   const [filterFields, setFields] = useState(["name", "description"])
@@ -73,12 +54,6 @@ export const CollectionPage: React.FC<Props> = () => {
     })
   }, [])
 
-  useEffect(() => {
-    if(previewImage.current){
-      setXScale(previewImage.current.naturalWidth/previewImage.current.width)
-      setYScale(previewImage.current.naturalHeight/previewImage.current.height)
-    }
-  })
 
   if(!collection){
     return (
@@ -115,40 +90,8 @@ export const CollectionPage: React.FC<Props> = () => {
     openAddDialog(true)
   }
 
-  const handleAddClose = () => {
+  const handleAddCollectibleClose = () => {
     openAddDialog(false)
-  }
-
-  const handleAdd = () => {
-    if(!image) return
-    
-    axios.post(
-      `/api/collections/${id}/create`,
-      {
-        name: addName,
-        description: addDescription,
-        image: image,
-        crop: JSON.stringify(crop),
-        values: JSON.stringify(addCustom),
-        scaleX: scaleX,
-        scaleY: scaleY
-      },
-      {
-        headers: {
-          "content-type": "multipart/form-data"
-        }
-      }
-    ).then(() => {
-      setAddName("")
-      setAddDescription("")
-      setCustom({})
-      openAddDialog(false)
-    })
-  }
-
-  const handleImage = (e:any) => {
-    setUrl(URL.createObjectURL(e.target.files[0]))
-    setImage(e.target.files[0])
   }
 
   const fields = collection.template.sort((a, b) => {
@@ -197,11 +140,13 @@ export const CollectionPage: React.FC<Props> = () => {
   //Filtering and them card
   const collectibles = collection.collectibles?.filter((collectible) => {
     if(filteredField === "name" || filteredField === "description"){
+      //Fields that every collectible have
       return filter.toLowerCase() === ""
       ? collectible
       : collectible[filteredField].toLowerCase().includes(filter.toLowerCase())
     }
     else{
+      //Custom user field
       let fieldIndex = collection.template.find((item) => item.name === filteredField)
       if(!fieldIndex){
         return collectible
@@ -265,74 +210,14 @@ export const CollectionPage: React.FC<Props> = () => {
         {collectibles}
       </Grid>
 
+      
+      <CreateCollectibleDialog 
+        fields={fields}
+        onClose={handleAddCollectibleClose}
+        uploadUrl={`/api/collections/${id}/create`}
+        open={addDialog}
+      />
 
-
-      <Dialog open={addDialog} onClose={handleAddClose}>
-        <DialogTitle>Uusi keräiltävä</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Täytä perustiedot.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin='dense'
-            fullWidth
-            label="Nimi"
-            defaultValue={addName}
-            onChange={(e) => {
-              setAddName(e.target.value)
-            }}
-          />
-          <TextField
-            margin='dense'
-            fullWidth
-            label="Kuvaus"
-            defaultValue={addDescription}
-            onChange={(e) => {
-              setAddDescription(e.target.value)
-            }}
-          />
-
-          <DialogContentText>
-            Kuva
-          </DialogContentText>
-          <Button sx={{mt: 2}}
-            variant="contained"
-            component="label"
-          >
-            Upload Image
-            <input
-              onChange={handleImage}
-              accept="image/*"
-              type="file"
-              hidden
-            />
-          </Button>
-          <br/>
-          <Box
-            sx={{
-              mt: 2,
-              maxWidth: "500px"
-            }}
-          >
-            <ReactCrop aspect={1} crop={crop} onChange={c => setCrop(c)}>
-              <img ref={previewImage} src={imageUrl}/>
-            </ReactCrop>
-          </Box>
-
-          <DialogContentText>
-            Käyttäjän itse määrittelemät kentät
-          </DialogContentText>
-          
-          {
-            fields
-          }
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleAddClose}>Peruuta</Button>
-          <Button onClick={handleAdd}>Lisää</Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }

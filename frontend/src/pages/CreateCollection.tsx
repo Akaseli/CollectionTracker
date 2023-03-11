@@ -23,17 +23,16 @@ export const CreateCollectionPage: React.FC<Props> = () => {
 
   const [activeStep, setActiveStep] = useState(0)
 
-  const next = () => {
+  const nextStep = () => {
     if(activeStep != steps.length -1){
       setActiveStep((prevStep) => prevStep + 1)
     }
     else{
-      createSet()
+      createCollection()
     }
-    
   }
 
-  const prev = () => {
+  const prevStep = () => {
     setActiveStep((prevStep) => prevStep + -1)
   }
 
@@ -59,8 +58,7 @@ export const CreateCollectionPage: React.FC<Props> = () => {
   //Form values
   const [fields, setFields] = useState<Field[]>([])
 
-  const createSet = () => {
-
+  const createCollection = () => {
     //Todo error
     if(!image) return
     
@@ -223,7 +221,7 @@ export const CreateCollectionPage: React.FC<Props> = () => {
       <Box mt={2}>
         <Stepper activeStep={activeStep}>
           {
-            steps.map((step, index) => {
+            steps.map((step) => {
               return (
                 <Step key={step}>
                   <StepLabel>{step}</StepLabel>
@@ -244,11 +242,11 @@ export const CreateCollectionPage: React.FC<Props> = () => {
               <Box sx={{display: "flex", flexDirection: "row", pt: 2}}>
                 <Button 
                   disabled={activeStep === 0}
-                  onClick={prev}  
+                  onClick={prevStep}  
                 >Edellinen</Button>
                 <Box sx={{flex: '1 1 auto'}}/>
                 <Button
-                  onClick={next}
+                  onClick={nextStep}
                 >{activeStep === steps.length - 1 ? "Luo" : "Seuraava"}</Button>
               </Box>
             </Box>
