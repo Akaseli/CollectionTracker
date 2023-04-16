@@ -92,17 +92,17 @@ export const MainPage: React.FC<Props> = () => {
       <Container maxWidth={"xs"}>
         <Stack spacing={2} divider={<Divider/>}>
           <Stack spacing={2}>
-            <Typography variant='h5'>Login</Typography>
+            <Typography variant='h5'>Kirjaudu</Typography>
             <TextField label="Username" onChange={(e) => {setLoginUser(e.target.value)}}/>
             <TextField label="Password" type="password" onChange={(e) => {setLoginPass(e.target.value)}}/>
-            <Button onClick={login} variant="contained">Login</Button>
+            <Button onClick={login} variant="contained">Kirjaudu</Button>
           </Stack>
 
           <Stack spacing={2}>
-            <Typography variant='h5'>Register</Typography>
+            <Typography variant='h5'>Luo tili</Typography>
             <TextField label="Username" onChange={(e) => {setRegisterUser(e.target.value)}}/>
             <TextField label="Password" type="password" onChange={(e) => {setRegisterPass(e.target.value)}}/>
-            <Button onClick={register} variant="contained" fullWidth>Register</Button>
+            <Button onClick={register} variant="contained" fullWidth>Luo tili</Button>
           </Stack>
         </Stack>
       </Container>

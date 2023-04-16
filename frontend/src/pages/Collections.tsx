@@ -50,7 +50,7 @@ export const CollectionsPage: React.FC<Props> = () => {
     socket.on("invite", (data) => {
       setInvitations((oldInvitations) => [...oldInvitations, JSON.parse(data)])
     })
-    
+
     axios.get("/api/collections").then((response) => {
       setCollections(response.data)
     })

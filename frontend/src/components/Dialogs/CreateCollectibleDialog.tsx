@@ -1,20 +1,21 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, InputLabel, TextField } from '@mui/material';
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react'
 import ReactCrop, { Crop } from 'react-image-crop';
+import { Field } from '../../interfaces/Field';
 
 interface Props {
   open: boolean,
   onClose: () => void
-  fields: JSX.Element[]
   uploadUrl: string
+  template: Field[]
 }
 
-export const CreateCollectibleDialog: React.FC<Props> = ({open, onClose, fields, uploadUrl}) => {
+export const CreateCollectibleDialog: React.FC<Props> = ({open, onClose, uploadUrl, template}) => {
   const [collectibleName, setCollectibleName] = useState("")
   const [collectibleDescription, setCollectibleDescription] = useState("")
 
-  const [collectbieCustomFields, setCollectibleCustomFields] = useState({})
+  const [collectibleCustomFields, setCollectibleCustomFields] = useState({})
 
   const [image, setImage] = useState()
 
@@ -32,6 +33,38 @@ export const CreateCollectibleDialog: React.FC<Props> = ({open, onClose, fields,
 
   const previewImage = useRef<HTMLImageElement>(null)
 
+  const fields = template.sort((a, b) => {
+    const sortA = a.sort
+    const sortB = b.sort
+
+    if(sortA < b.sort){
+      return -1
+    }
+    if(sortA > sortB){
+      return 1
+    }
+    return 0
+  }).map((field) => {
+    return (
+      <Box key={field.name}>
+        <InputLabel>
+          {field.name}
+        </InputLabel>
+        <TextField 
+          type={field.type}
+          margin='dense'
+          fullWidth
+          onChange={(e) => {
+            setCollectibleCustomFields({
+              ...collectibleCustomFields,
+              [field.id]: e.target.value
+            })
+          }}
+        />
+      </Box>
+    );
+  }) 
+
   const createCollectible = () => {
     if(!image) return
     
@@ -42,7 +75,7 @@ export const CreateCollectibleDialog: React.FC<Props> = ({open, onClose, fields,
         description: collectibleDescription,
         image: image,
         crop: JSON.stringify(crop),
-        values: JSON.stringify(collectbieCustomFields),
+        values: JSON.stringify(collectibleCustomFields),
         scaleX: scaleX,
         scaleY: scaleY
       },

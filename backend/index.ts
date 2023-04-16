@@ -320,12 +320,14 @@ app.post("/api/collections/:id/create", passport.authenticate("jwt", {session: f
   }
 
   //Create new collection
-  pool.query("INSERT INTO collectible(pictureid, collectionid, name, description, creator, data) VALUES ($1, $2, $3, $4, $5, $6)", [imageId, req.params.id, name, description, user, template], (err, res) => {
+  pool.query("INSERT INTO collectible(pictureid, collectionid, name, description, creator, data) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id", [imageId, req.params.id, name, description, user, template], (err, res) => {
     if(err){
       throw err
     }
-    //TODO send websocket data
 
+    let cId = res.rows[0].id
+    //TODO send websocket data
+    io.to(`room-${req.params.id}`).emit("create", {"id": cId, "pictureid": imageId, "name": name, "description": description, "data": JSON.parse(template)})
   })
 })
 
@@ -362,6 +364,7 @@ app.delete("/api/collections/:id/delete/:collectible",  passport.authenticate("j
   })
   
   //TODO send websocket data
+  io.to(`room-${collection}`).emit("delete", collectible)
 
   res.send(200)
 })
@@ -381,7 +384,7 @@ app.get("/api/collections",  passport.authenticate("jwt", {session: false}), (re
 app.get("/api/collections/:id", passport.authenticate("jwt", {session: false}), async (req, res) => {
   const { rows } = await pool.query("SELECT id, pictureid, name, description, template, owner FROM collections WHERE (owner = $1 OR (id IN (SELECT tableid FROM sharedtables WHERE userid = $1))) AND id = $2", [req.user?.id, req.params.id])
 
-  if(!rows){
+  if(!rows[0]){
     res.sendStatus(403)
     return
   }
@@ -494,6 +497,14 @@ io.on("connection", async (socket) => {
   const user = jwt.verify(cookies["jwt"], process.env.SECRET)
   //TODO handle expired error
   
+
+  socket.on("join", async (arg) => {
+    //Verify access
+    const { rows } = await pool.query("SELECT id FROM collections WHERE (owner = $1 OR (id IN (SELECT tableid FROM sharedtables WHERE userid = $1))) AND id = $2", [user["id"], arg])
+    if(!rows) return
+    console.log("ROOM MOVE")
+    socket.join(`room-${arg}`)
+  });
   //Join room
   socket.join(user["id"])
 })
