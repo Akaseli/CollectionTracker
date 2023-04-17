@@ -1,8 +1,9 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, InputLabel, TextField } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Input, InputLabel, TextField } from '@mui/material';
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react'
 import ReactCrop, { Crop } from 'react-image-crop';
-import { Field } from '../../interfaces/Field';
+import { Field, InputFormat } from '../../interfaces/Field';
+import moment from 'moment';
 
 interface Props {
   open: boolean,
@@ -45,6 +46,8 @@ export const CreateCollectibleDialog: React.FC<Props> = ({open, onClose, uploadU
     }
     return 0
   }).map((field) => {
+    
+
     return (
       <Box key={field.name}>
         <InputLabel>
@@ -55,10 +58,18 @@ export const CreateCollectibleDialog: React.FC<Props> = ({open, onClose, uploadU
           margin='dense'
           fullWidth
           onChange={(e) => {
-            setCollectibleCustomFields({
-              ...collectibleCustomFields,
-              [field.id]: e.target.value
-            })
+            if(field.type == InputFormat.DATE){
+              setCollectibleCustomFields({
+                ...collectibleCustomFields,
+                [field.id]: Math.floor(new Date(e.target.value).getTime() / 1000)
+              })
+            }
+            else{
+              setCollectibleCustomFields({
+                ...collectibleCustomFields,
+                [field.id]: e.target.value
+              })
+            }
           }}
         />
       </Box>

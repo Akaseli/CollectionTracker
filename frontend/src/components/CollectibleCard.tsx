@@ -2,7 +2,7 @@ import { Card, CardActionArea, CardActions, CardContent, CardMedia, Divider, Gri
 import IconButton from '@mui/material/IconButton';
 import React from 'react'
 import { Collectible } from '../interfaces/Collection';
-import { Field } from '../interfaces/Field';
+import { Field, InputFormat } from '../interfaces/Field';
 import Delete from '@mui/icons-material/Delete';
 
 interface Props {
@@ -15,9 +15,17 @@ export const CollectibleCard: React.FC<Props> = ({collectible, template, onDelet
 
 
   let custom = template.map((field, index) => {
-    return (
-      <Typography>{field.name + ": " + collectible.data[field.id]}</Typography>
-    );
+    //Custom for dates
+    if(template[index].type == InputFormat.DATE){
+      return (
+        <Typography>{field.name + ": " + new Date(collectible.data[field.id]).toLocaleDateString()}</Typography>
+      );
+    }
+    else{
+      return (
+        <Typography>{field.name + ": " + collectible.data[field.id]}</Typography>
+      );
+    }
   })
 
   return (
