@@ -291,7 +291,6 @@ app.post("/api/collections/:id/create", passport.authenticate("jwt", {session: f
     const image = sharp(file.data)
     const crop = JSON.parse(req.body.crop)
 
-
     //Extract
     if(crop.width != 0 && crop.height != 0){
       image.extract({
@@ -311,7 +310,7 @@ app.post("/api/collections/:id/create", passport.authenticate("jwt", {session: f
     //TODO maybe check if file already exists
     const fileName = v4() + ".jpeg";
 
-    image
+    await image
       .toFormat("jpeg")
       .toFile(`./backend/usercontent/${fileName}`)
 
@@ -366,7 +365,7 @@ app.delete("/api/collections/:id/delete/:collectible",  passport.authenticate("j
   //TODO send websocket data
   io.to(`room-${collection}`).emit("delete", collectible)
 
-  res.send(200)
+  res.sendStatus(200)
 })
 
 //Get collections shared + owned

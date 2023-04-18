@@ -18,7 +18,7 @@ export const CollectibleCard: React.FC<Props> = ({collectible, template, onDelet
     //Custom for dates
     if(template[index].type == InputFormat.DATE){
       return (
-        <Typography>{field.name + ": " + new Date(collectible.data[field.id]).toLocaleDateString()}</Typography>
+        <Typography>{field.name + ": " + new Date(collectible.data[field.id] * 1000).toLocaleDateString()}</Typography>
       );
     }
     else{

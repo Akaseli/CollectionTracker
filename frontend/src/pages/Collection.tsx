@@ -11,6 +11,7 @@ import { InviteDialog } from '../components/Dialogs/InviteDialog';
 import { Collectible, Collection } from '../interfaces/Collection';
 
 import io from "socket.io-client"
+import { InputFormat } from '../interfaces/Field';
 
 interface Props {
 
@@ -175,6 +176,15 @@ export const CollectionPage: React.FC<Props> = () => {
       return filter.toLowerCase() === ""
       ? collectible
       : collectible[filteredField].toLowerCase().includes(filter.toLowerCase())
+    }
+    else if(collection.template[filterFields.indexOf(filteredField) - 2].type == InputFormat.DATE){
+      const id = collection.template[filterFields.indexOf(filteredField) - 2].id;
+
+      let date = new Date(collectible.data[id] * 1000).toLocaleDateString();
+
+      return filter.toLowerCase() === ""
+      ? collectible
+      : date.includes(filter.toLowerCase())
     }
     else{
       //Custom user field
