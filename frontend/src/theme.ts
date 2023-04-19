@@ -9,6 +9,7 @@ const theme = createTheme({
             main: red.A400
         }
     }
+    
 });
 
 export default theme;
