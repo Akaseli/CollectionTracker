@@ -149,10 +149,6 @@ export const CollectionPage: React.FC<Props> = () => {
     openAddDialog(true)
   }
 
-  const handleAddCollectibleClose = () => {
-    openAddDialog(false)
-  }
-
   const selectOptions = filterFields.map((fieldName) => {
     switch(fieldName){
       case "name":
@@ -264,7 +260,7 @@ export const CollectionPage: React.FC<Props> = () => {
 
       <CreateCollectibleDialog
         template={collection.template}
-        onClose={handleAddCollectibleClose}
+        onClose={() => {openAddDialog(false)}}
         uploadUrl={`/api/collections/${id}/create`}
         open={addDialog}
       />

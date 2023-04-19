@@ -316,6 +316,7 @@ app.post("/api/collections/:id/create", passport.authenticate("jwt", {session: f
 
     const { rows } = await pool.query("INSERT INTO pictures(filename) VALUES ($1) RETURNING id", [fileName])
     imageId = rows[0].id
+
   }
 
   //Create new collection
@@ -328,6 +329,8 @@ app.post("/api/collections/:id/create", passport.authenticate("jwt", {session: f
     //TODO send websocket data
     io.to(`room-${req.params.id}`).emit("create", {"id": cId, "pictureid": imageId, "name": name, "description": description, "data": JSON.parse(template)})
   })
+
+  res.sendStatus(200)
 })
 
 //Delete Item from collection

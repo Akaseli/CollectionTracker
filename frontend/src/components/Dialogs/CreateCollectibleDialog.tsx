@@ -95,11 +95,21 @@ export const CreateCollectibleDialog: React.FC<Props> = ({open, onClose, uploadU
           "content-type": "multipart/form-data"
         }
       }
-    ).then(() => {
+    )
+    .then((response) => {
+      onClose()
       setCollectibleName("")
       setCollectibleDescription("")
       setCollectibleCustomFields({})
-      onClose()
+      setImage(undefined);
+      setUrl("");
+      setCrop({
+        unit: "%",
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0
+      })
     })
   }
 
@@ -150,7 +160,7 @@ export const CreateCollectibleDialog: React.FC<Props> = ({open, onClose, uploadU
             variant="contained"
             component="label"
           >
-            Upload Image
+            Lataa kuva
             <input
               onChange={handleImage}
               accept="image/*"
@@ -170,10 +180,10 @@ export const CreateCollectibleDialog: React.FC<Props> = ({open, onClose, uploadU
             </ReactCrop>
           </Box>
 
-          <DialogContentText>
-            Käyttäjän itse määrittelemät kentät
+          <DialogContentText variant='h6'>
+            Käyttäjän omat kentät:
           </DialogContentText>
-          
+
           {
             fields
           }
