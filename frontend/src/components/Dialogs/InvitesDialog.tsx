@@ -30,7 +30,7 @@ export const InvitesDialog: React.FC<Props> = ({open, invitations, onInviteAccep
           {
             invitations.length > 0 
             ? ( <List> {invites} </List> )
-            : ( <Typography>No invitations received</Typography> )
+            : ( <Typography>Ei saatuja kutsuja.</Typography> )
           }
         </DialogContent>
         <DialogActions>

@@ -3,6 +3,7 @@ import axios from 'axios';
 import React from 'react'
 import { Collectible } from '../../interfaces/Collection';
 
+
 interface Props {
   collectible: Collectible,
   open: boolean,
@@ -31,7 +32,7 @@ export const DeleteCollectibleDialog: React.FC<Props> = ({open, collectible, onC
       </DialogTitle>
       <DialogActions>
         <Button onClick={onClose}>Peruuta</Button>
-        <Button onClick={deleteCollectible}>Poista</Button>
+        <Button onClick={deleteCollectible} sx={{bgcolor: "red", color: "white"}}>Poista</Button>
       </DialogActions>
     </Dialog>
   );

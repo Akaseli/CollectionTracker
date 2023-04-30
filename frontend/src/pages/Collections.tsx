@@ -108,6 +108,7 @@ export const CollectionsPage: React.FC<Props> = () => {
   return(
     <Box m={2}>
       <Typography variant="h4">Kokoelmat</Typography>
+      <Typography variant='body1'>Kirjauduttu tilillä: {user.username}</Typography>
       <Grid container mt={2} gap={2}>
         <Button variant="contained" onClick={() => {navigate("/collections/create")}}>Luo kokoelma</Button>
         <Badge badgeContent={invitations.length} color="secondary">

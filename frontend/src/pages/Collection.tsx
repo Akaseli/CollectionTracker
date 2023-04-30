@@ -243,7 +243,7 @@ export const CollectionPage: React.FC<Props> = () => {
       />
       </Box>
       
-      <Grid container sx={{mt: 2}} spacing={2}>
+      <Grid container sx={{mt: 2, justifyContent: "center"}} spacing={2}>
         {collectibles}
       </Grid>
 
