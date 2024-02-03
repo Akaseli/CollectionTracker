@@ -398,7 +398,6 @@ app.get("/api/static/:imageId", passport.authenticate("jwt", {session: false}), 
 
   const userPermission = await pool.query("SELECT id FROM collections WHERE (id = (SELECT collectionid AS id FROM collectible WHERE pictureid = $1 UNION SELECT id FROM collections WHERE pictureid = $1)) AND (owner = $2 OR (id IN (SELECT tableid FROM sharedtables WHERE userid = $2)))", [req.params.imageId, userId])
 
-  console.log(userPermission.rowCount)
 
   if(userPermission.rowCount == 0){
     res.sendStatus(403)
