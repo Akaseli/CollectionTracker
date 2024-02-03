@@ -35,12 +35,13 @@ export const CollectibleCard: React.FC<Props> = ({collectible, template, onDelet
           onClick={() => {
             
           }}
-        >
+        > 
           <CardMedia
             component="img"
             height="300"
             width="300"
-            image={`/api/static/${collectible.pictureid}`}
+            src={`/api/static/${collectible.pictureid}`}
+            alt='Collection Picture'
           />
           
           <CardContent>
