@@ -246,7 +246,6 @@ app.post("/api/collection", passport.authenticate("jwt", {session: false}), asyn
       })
     }
 
-    //TODO maybe check if file already exists
     const fileName = v4() + ".jpeg";
 
     image
@@ -307,7 +306,6 @@ app.post("/api/collections/:id/create", passport.authenticate("jwt", {session: f
       })
     }
 
-    //TODO maybe check if file already exists
     const fileName = v4() + ".jpeg";
 
     await image
@@ -326,7 +324,6 @@ app.post("/api/collections/:id/create", passport.authenticate("jwt", {session: f
     }
 
     let cId = res.rows[0].id
-    //TODO send websocket data
     io.to(`room-${req.params.id}`).emit("create", {"id": cId, "pictureid": imageId, "name": name, "description": description, "data": JSON.parse(template)})
   })
 
@@ -365,7 +362,6 @@ app.delete("/api/collections/:id/delete/:collectible",  passport.authenticate("j
     console.log("FILE DELETED SUCCESSFULLY")
   })
   
-  //TODO send websocket data
   io.to(`room-${collection}`).emit("delete", collectible)
 
   res.sendStatus(200)
@@ -398,11 +394,20 @@ app.get("/api/collections/:id", passport.authenticate("jwt", {session: false}), 
 
 //Image route
 app.get("/api/static/:imageId", passport.authenticate("jwt", {session: false}), async (req, res) => {
-  //TODO CHECK IF USER HAS ACCESS TO SAID IMAGE
+  const userId = req.user?.id
 
-  const { rows } = await pool.query("SELECT filename FROM pictures WHERE id = $1", [req.params.imageId])
+  const userPermission = await pool.query("SELECT id FROM collections WHERE (id = (SELECT collectionid AS id FROM collectible WHERE pictureid = $1 UNION SELECT id FROM collections WHERE pictureid = $1)) AND (owner = $2 OR (id IN (SELECT tableid FROM sharedtables WHERE userid = $2)))", [req.params.imageId, userId])
+
+  console.log(userPermission.rowCount)
+
+  if(userPermission.rowCount == 0){
+    res.sendStatus(403)
+  }
+  else{
+    const { rows } = await pool.query("SELECT filename FROM pictures WHERE id = $1", [req.params.imageId])
   
-  res.sendFile(`${__dirname}/usercontent/${rows[0]["filename"]}`)
+    res.sendFile(`${__dirname}/usercontent/${rows[0]["filename"]}`)
+  }
 })
 
 
@@ -446,14 +451,13 @@ app.get("/api/invites" , passport.authenticate("jwt", {session: false}), async (
 app.post("/api/invite/accept/:id", passport.authenticate("jwt", {session: false}), async (req, res) => {
   const user = req.user?.id
  
-  //TODO check expiring date
+
   const { rows } = await pool.query("SELECT collectionid FROM invites WHERE targetId = $1 AND id = $2", [user, req.params.id])
 
   if(rows){
     const collection = rows[0]["collectionid"]
 
     pool.query("INSERT INTO sharedtables(tableid, userid) VALUES($1, $2)", [collection, user])
-    //TODO send the table data thru websocket to user
   }
 
   pool.query("DELETE FROM invites WHERE targetid = $1 AND id = $2", [user, req.params.id])
