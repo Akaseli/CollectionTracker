@@ -49,6 +49,11 @@ const pool = new Pool({
 // Middleware
 app.use(fileUpload())
 
+const usercontent = "./backend/usercontent";
+if(!fs.existsSync(usercontent)){
+  fs.mkdirSync(usercontent)
+}
+
 app.use(
   cors({
     origin: "http://localhost:8080",
@@ -250,7 +255,7 @@ app.post("/api/collection", passport.authenticate("jwt", {session: false}), asyn
 
     image
       .toFormat("jpeg")
-      .toFile(`./backend/usercontent/${fileName}`)
+      .toFile(`${usercontent}/${fileName}`)
 
     const { rows } = await pool.query("INSERT INTO pictures(filename) VALUES ($1) RETURNING id", [fileName])
     imageId = rows[0].id
